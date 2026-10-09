@@ -23,11 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-v!0ieewk^vy0kzb63*r%3z7=7-30-t-4of2wsxqe6tcp$048+y'
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-#ALLOWED_HOSTS = ['cse.uaa.alaska.edu', 'www.cse.uaa.alaska.edu']
-
+ALLOWED_HOSTS = ['cse.uaa.alaska.edu', 'www.cse.uaa.alaska.edu', 'localhost', '127.0.0.1']
 
 INSTALLED_APPS = [
     'django.contrib.admin',

@@ -597,17 +597,16 @@ window.addEventListener('load', function() {
         }
       }
 
-      //var url = '/sc/query/?term=' + selectedTerm;
-      var url = '/query/?term=' + selectedTerm;
+      var baseUrl = window.location.pathname.replace(/\/+$/, '');
+      var url = (baseUrl ? baseUrl : '/sc') + '/query/?term=' + encodeURIComponent(selectedTerm);
 
-
-      // add selected subjects to the URL if any are selected
+      // add selected majors and subjects to the URL if any are selected
       if (selectedMajors.length > 0) {
-        url += '&majors=' + selectedMajors;
+        url += '&majors=' + encodeURIComponent(selectedMajors);
       }
 
       if (selectedSubjects.length > 0) {
-        url += '&subjects=' + selectedSubjects;
+        url += '&subjects=' + encodeURIComponent(selectedSubjects);
       }
 
       const loadingContainer = document.getElementById('loading-search-container');
@@ -615,25 +614,35 @@ window.addEventListener('load', function() {
       var xhr = new XMLHttpRequest();
       loadingContainer.style.display = 'flex';
       xhr.onreadystatechange = function() {
-          if (xhr.readyState === 4 && xhr.status === 200) {
-              class_array = [];
-              saved_class_array = [];
-              course_hash_table = {};
-              saved_course_hash_table = {};
-              online_courses = [];
-              unscheduled_courses = [];
-              changeLog = []
-              saved_data = false;
-              const classes = JSON.parse(xhr.responseText);
+          if (xhr.readyState === 4) {
               loadingContainer.style.display = 'none';
-              class_array = JSON.parse(classes.data);
-              saved_class_array = [...class_array];
-              initializeFilterVariables();
-              populateInstructorsDropdown();
-              populateBuildingsDropdown();
-              populateCoursesAndSubjectDropdown();
-              updateCourseElements();
-              conflictFunction();
+              if (xhr.status === 200) {
+                  class_array = [];
+                  saved_class_array = [];
+                  course_hash_table = {};
+                  saved_course_hash_table = {};
+                  online_courses = [];
+                  unscheduled_courses = [];
+                  changeLog = [];
+                  saved_data = false;
+                  try {
+                      const classes = JSON.parse(xhr.responseText);
+                      class_array = JSON.parse(classes.data);
+                      saved_class_array = [...class_array];
+                      initializeFilterVariables();
+                      populateInstructorsDropdown();
+                      populateBuildingsDropdown();
+                      populateCoursesAndSubjectDropdown();
+                      updateCourseElements();
+                      conflictFunction();
+                  } catch (e) {
+                      console.error("Error parsing response:", e);
+                      alert("Error parsing schedule data from server.");
+                  }
+              } else {
+                  console.error("Server error:", xhr.status, xhr.statusText);
+                  alert("Error retrieving schedule data (HTTP " + xhr.status + "). Please try again.");
+              }
           }
       };
       console.log(url);

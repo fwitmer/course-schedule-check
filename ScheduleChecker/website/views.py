@@ -1,38 +1,22 @@
 # Schedule Checker Team - Austin Edwards, John Schwenke, and Conner Trouy
-# May 4th, 2023
-# Contributions:
-#   This Django view and scraping method was designed by Austin 
+# May 4th, 2023 / Updated Oct 2026
 #
 # Dependencies:
-#   The scraping process is dependent on the Curric website for its data https://curric.uaa.alaska.edu/
-
-
+#   Course data is retrieved directly from Curric API: https://curric.uaa.alaska.edu/ajax/ajaxScheduleSearch.php
 
 from django.shortcuts import render
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.db.models import Count
 from website.models import MajorRequirements, Subjects
 import json
-from selenium import webdriver
-from selenium.common.exceptions import UnexpectedAlertPresentException
-from bs4 import BeautifulSoup
-import pandas as pd
-import threading
-import copy
+import urllib.request
 import concurrent.futures
-import time
-import os
+import pandas as pd
 import re
-#import requests
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
-import numpy as np
-import sqlite3
 
 
 def calendar(request):
-    # queries database tables MajorRequirements and Subjects used to populate dropdown menues 
+    # queries database tables MajorRequirements and Subjects used to populate dropdown menus 
     degree_major_data = MajorRequirements.objects.values('degree', 'major').annotate(count=Count('index')).order_by('degree', 'major')
     subject_data = Subjects.objects.values('subject', 'subj').order_by('subject', 'subj')
     context = {
@@ -42,224 +26,138 @@ def calendar(request):
     return render(request, 'scheduler.html', context)
 
 
+def fetch_schedule_json(url):
+    try:
+        req = urllib.request.Request(
+            url,
+            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) CourseScheduleChecker'}
+        )
+        with urllib.request.urlopen(req, timeout=12) as response:
+            data = json.loads(response.read().decode('utf-8'))
+            if isinstance(data, list):
+                return data
+    except Exception as e:
+        print(f"Error querying {url}: {e}")
+    return []
+
+
+def parse_time(time_str):
+    """
+    Convert a time string in 'hhmma' format (e.g., '1000am', '0100pm') to military time (24-hour) format.
+    """
+    if not time_str or not isinstance(time_str, str):
+        return time_str
+    time_str = time_str.strip()
+    if len(time_str) == 6:
+        try:
+            hours = int(time_str[:2])
+            minutes = int(time_str[2:4])
+            meridian = time_str[4:].upper()
+            if meridian == "PM" and hours != 12:
+                hours += 12
+            elif meridian == "AM" and hours == 12:
+                hours = 0
+            return f"{hours:02d}{minutes:02d}"
+        except ValueError:
+            return time_str
+    return time_str
+
+
 def get_major_requirements(request):
     # get term, majors, and subject from client
     selected_term = request.GET.get('term')
     selected_majors = request.GET.get('majors')    
     selected_subjects = request.GET.get('subjects')
 
+    if not selected_term:
+        return JsonResponse({'data': '[]'})
+
     # selected_subjects can be empty
     selected_subj = []
     if selected_subjects:
-        selected_subjects = selected_subjects.split(',')
-        for subject in selected_subjects:
-            abbreviation, full_name = subject.split(' - ')  # e.g., "CSCE - Computer Science and Computer Engineering"
-            selected_subj.append(abbreviation)
+        for subject in selected_subjects.split(','):
+            subject = subject.strip()
+            if ' - ' in subject:
+                abbreviation, _ = subject.split(' - ', 1)
+                selected_subj.append(abbreviation.strip())
+            elif subject:
+                selected_subj.append(subject)
 
-
-    # retrieve  requirements for each selected major
-    courses = set()  # use a set to store all courses
+    # retrieve requirements for each selected major
+    courses = set()
     if selected_majors:
-        selected_majors = selected_majors.split(',')
-        for degree_major in selected_majors:
-            major, degree = degree_major.split(' (')
-            degree = degree[:-1]  # remove the closing parenthesis
-            major_requirements = set()   # used to delete duplicate courses
-            for requirement in MajorRequirements.objects.filter(degree=degree.strip(), major=major.strip()):
-                major_requirements.add(requirement.course)
-            courses.update(major_requirements)  # append major_requirments to list of courses
+        for degree_major in selected_majors.split(','):
+            degree_major = degree_major.strip()
+            if ' (' in degree_major and degree_major.endswith(')'):
+                major, degree = degree_major.rsplit(' (', 1)
+                degree = degree[:-1]
+                for req in MajorRequirements.objects.filter(degree=degree.strip(), major=major.strip()):
+                    if req.course:
+                        courses.add(req.course.strip())
 
     # Remove courses included in the selected subjects
-    courses = [course for course in courses if not any(course.startswith(subj + " ") for subj in selected_subj)]
+    courses = [c for c in courses if not any(c.startswith(subj + " ") for subj in selected_subj)]
     courses = sorted(courses)
 
-    # create an dictionary of courses by subject
+    # create a dictionary of courses by subject
     courses_by_subject = {}
     for course in courses:
-        # e.g., "CSCE A101" -> "CSCE", "A101"
-        subj, number = course.split()
-        courses_by_subject.setdefault(subj, []).append(number)
+        parts = course.split()
+        if len(parts) >= 2:
+            courses_by_subject.setdefault(parts[0], []).append(parts[1])
 
-
-    # create appropriate urls for scraping
+    # create appropriate urls for Curric JSON API
     urls = []
     for subj, numbers in courses_by_subject.items():
-        # Combine the list of course numbers into a comma-separated string
-        course_numbers = ",".join(numbers.replace(" ", "+") for numbers in numbers)
-        url = "https://curric.uaa.alaska.edu/scheduleSearch.php?term={}&subj={}&crse={}".format(selected_term, subj, course_numbers)
+        course_numbers = ",".join(num.replace(" ", "+") for num in numbers)
+        url = f"https://curric.uaa.alaska.edu/ajax/ajaxScheduleSearch.php?term={selected_term}&subj={subj}&crse={course_numbers}"
         urls.append(url)
     for subj in selected_subj:
-        url = "https://curric.uaa.alaska.edu/scheduleSearch.php?term={}&subj={}".format(selected_term, subj)
+        url = f"https://curric.uaa.alaska.edu/ajax/ajaxScheduleSearch.php?term={selected_term}&subj={subj}"
         urls.append(url)
 
-    # thread_count = min(os.cpu_count(), len(urls))
+    if not urls:
+        return JsonResponse({'data': '[]'})
+
+    all_records = []
     thread_count = min(8, len(urls))
-    # seperates urls into batches determined by avaliable resourses
-    url_batches = [urls[i::thread_count] for i in range(thread_count)]
-    scraping_futures = []
-    temp_dataframe_list = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=thread_count) as executor:
+        futures = [executor.submit(fetch_schedule_json, url) for url in urls]
+        for future in concurrent.futures.as_completed(futures):
+            all_records.extend(future.result())
 
-    # scrape data for each batch of URLs using ThreadPoolExecutor
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        for url_batch in url_batches:
-            # initiate threads in batches determined by avaliable resources
-            scraping_future = executor.submit(scrape_urls, url_batch)
-            scraping_futures.append(scraping_future)
+    if not all_records:
+        return JsonResponse({'data': '[]'})
 
-    # retrieve the results of the futures and store them in a list of DataFrames
-    for scraping_future in concurrent.futures.as_completed(scraping_futures):
-        try:
-            scraped_dataframe = scraping_future.result()
-            temp_dataframe_list.append(scraped_dataframe)
-                
-        except Exception as e:
-            print(f"Threading exception occurred: {e}")
-            # dataframes.append(pd.DataFrame())
+    clean_ws = lambda x: re.sub(r'\s{2,}', ' ', str(x).strip()) if x else ''
 
-        # some data cleanup functions. the university data isnt very consistent.  this is just to extract the important information
-    clean_whitespace = lambda x: re.sub(r'\s{2,}', ' ', x.strip()) if isinstance(x, str) else x
+    rows = []
+    for rec in all_records:
+        bldg = clean_ws(rec.get('building', ''))
+        room = clean_ws(rec.get('room', ''))
 
-    # Concatenate list of dataframes into a single dataframe
-    if not temp_dataframe_list:
-        return
-    
-    class_data_df = pd.concat(temp_dataframe_list)
-    class_data_df = class_data_df.dropna(how='all') # deletes any empty rows
-    class_data_df = class_data_df.rename(columns={'Del Mthd': 'DelMthd'})
-    
-    class_data_df = class_data_df.applymap(clean_whitespace)
-    original_class_data_df = class_data_df.copy()
-
-    class_data_df[['Subj', 'Crs', 'Sec']] = class_data_df['Subj Crs Sec'].str.split(' ', expand=True)
-    class_data_df = class_data_df.loc[:, ['CRN', 'Subj',"Crs","Sec","Title","Days","STime","ETime","Bldg","Room","Instructor","DelMthd"]]
-
-    # Apply the cleanup functions to dataframe
-    class_data_df["STime"] = class_data_df["STime"].apply(parse_time)
-    class_data_df["ETime"] = class_data_df["ETime"].apply(parse_time)
-
-    class_data_df[["Days", "STime", "ETime", "Bldg", "Room"]] = class_data_df.apply(narrow_down, axis=1, result_type="expand")
-
-    class_data_json = class_data_df.to_json(orient='records')
-    # original_class_data_json = original_class_data_df.to_json(orient='records')
-
-    # response_data = {
-    #     'class_data_json': class_data_json,
-    #     'original_class_data_json': original_class_data_json,
-    #     'class_data_df': class_data_df.to_dict(),
-    #     'original_class_data_df': original_class_data_df.to_dict(),
-    # }
-
-    # return JsonResponse({'data': response_data})
-    return JsonResponse({'data': class_data_json})
-
-
-def scrape_urls(urls):
-    # Create a webdriver instance
-    driver_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'chromedriver')
-    options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    options.add_argument('--disable-gpu')
-    driver = webdriver.Chrome(executable_path=driver_path, options=options)
-
-    temp_dataframe_list = []
-    try:
-        for url in urls:
-            url = str(url)
-            driver.get(url) # open url 
-            wait = WebDriverWait(driver, 20) # wait up to 10 seconds for the table to load
-            wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'table-striped'))) # wait for the table to be visible
-            html = driver.page_source
-            soup = BeautifulSoup(html, 'html.parser')
-            table = soup.find('table', {'class': 'table table-striped table-condensed'})
-
-            # Extract headers
-            headers = []
-            for th in table.find_all('th'):     #<th></th>
-                headers.append(th.text.strip())
-
-            # Extract the table rows and store them in a list of lists
-            class_data = []
-            for tr in table.find_all('tr')[1:]:
-                row_data = []
-                for td in tr.find_all('td'):
-                    if '<br/>' in str(td):
-                        tag_str_list = str(td).split('<br/>')
-                        tag_list = [BeautifulSoup(tag_str_list[0], 'html.parser')]
-                        tag_list += [BeautifulSoup('<td>' + tag_str, 'html.parser').find() for tag_str in tag_str_list[1:]]
-                        cell_text = [tag.text.strip() for tag in tag_list]
-                        cell_text = [cell for cell in cell_text if cell != '']
-                        if len(cell_text) == 1:
-                            cell_text = cell_text[0]
-                    else:
-                        cell_text = td.text.strip()
-                    row_data.append(cell_text)
-                class_data.append(row_data)
-
-            scraped_dataframe = pd.DataFrame(class_data, columns=headers)
-            temp_dataframe_list.append(scraped_dataframe)
-
-        driver.quit()
-
-        # Concatenate the dataframes
-        if temp_dataframe_list:
-            class_data_df = pd.concat(temp_dataframe_list)
+        # Delivery method: mark ONLINE if room is ONLINE or bldg is DIST
+        if room == 'ONLINE' or bldg == 'DIST':
+            del_mthd = 'ONLINE'
         else:
-            class_data_df = pd.DataFrame()
-        return class_data_df
+            del_mthd = 'FACE'
 
-    # occurs when the query has no data in curric.  for example summer classes with limited listings
-    except UnexpectedAlertPresentException:
-        print(f"No data found for URL: {url}")
-        # Skip to the next URL
-        pass
+        rows.append({
+            'CRN': clean_ws(rec.get('crn', '')),
+            'Subj': clean_ws(rec.get('subj', '')),
+            'Crs': clean_ws(rec.get('crs', '')),
+            'Sec': clean_ws(rec.get('sec', '')),
+            'Title': clean_ws(rec.get('title', '')),
+            'Days': clean_ws(rec.get('days', '')),
+            'STime': parse_time(rec.get('stime', '')),
+            'ETime': parse_time(rec.get('etime', '')),
+            'Bldg': bldg,
+            'Room': room,
+            'Instructor': clean_ws(rec.get('instructors', '')),
+            'DelMthd': del_mthd,
+        })
 
-
-    """
-    Convert a time string in "hhmma" format to military time (24-hour) format.
-    """
-def parse_time(time_str):
-    if isinstance(time_str, list):
-        return [parse_time(t) for t in time_str]
-    elif len(time_str) == 6:
-        hours = int(time_str[:2])
-        minutes = int(time_str[2:4])
-        meridian = time_str[4:].upper()
-        if meridian == "PM" and hours != 12:
-            hours += 12
-        elif meridian == "AM" and hours == 12:
-            hours = 0
-        return f"{hours:02d}{minutes:02d}"
-    else:
-        return time_str
-
-
-'''
-This function eliminates the multi row cells and chooses the most relevent cell
-It also eliminates some potentially usefull information from some classes like labs    
-'''
-
-def narrow_down(row):
-    if isinstance(row["Days"], list):
-        scores = []
-        for i in range(len(row["Days"])):
-            score = 0
-            if row["Days"][i] == "TBA":
-                score += 1
-            if row["STime"][i] == "TBA":
-                score += 1
-            if row["ETime"][i] == "TBA":
-                score += 1
-            if row["Bldg"][i] == "DIST":
-                score += 1
-            if (row["Room"][i] == "ONLINE") or (row["Room"][i] == "BLKBD"):
-                score += 1
-            scores.append(score)
-        index = scores.index(min(scores))
-        days = row["Days"][index]
-        stime = row["STime"][index]
-        etime = row["ETime"][index]
-        bldg = row["Bldg"][index]
-        room = row["Room"][index]
-        return days, stime, etime, bldg, room
-    else:
-        return row["Days"], row["STime"], row["ETime"], row["Bldg"], row["Room"]
+    class_data_df = pd.DataFrame(rows)
+    class_data_df = class_data_df.drop_duplicates(subset=['CRN', 'Days', 'STime', 'ETime'])
+    class_data_json = class_data_df.to_json(orient='records')
+    return JsonResponse({'data': class_data_json})

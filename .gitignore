@@ -1,0 +1,17 @@
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+env/
+venv/
+ENV/
+
+# Local notes & secrets
+CourseScheduleCheckNotes.txt
+.env
+
+# OS files
+Thumbs.db
+.DS_Store
