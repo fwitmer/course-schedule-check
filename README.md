@@ -116,7 +116,7 @@ CourseScheduleCheck/
 
 ## Production Deployment (Apache on Ubuntu)
 
-The production site is hosted on `anc-mocklinux` (`www.cse.uaa.alaska.edu`) under the `/sc` subpath.
+The production site is hosted on `www.cse.uaa.alaska.edu` under the `/sc` subpath.
 
 ### One-Step Server Update
 To deploy committed changes from GitHub to the production server:
