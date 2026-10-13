@@ -628,6 +628,17 @@ window.addEventListener('load', function() {
                   try {
                       const classes = JSON.parse(xhr.responseText);
                       class_array = JSON.parse(classes.data);
+                      if (!Array.isArray(class_array) || class_array.length === 0) {
+                          const selectedSemesterText = $('#semester-select option:selected').text() || selectedTerm;
+                          initializeFilterVariables();
+                          updateCourseElements();
+                          displayUnscheduledCourses();
+                          displayOnlineCourses();
+                          conflicts = [];
+                          displayConflicts();
+                          alert(`No course data were returned by the curriculum website for ${selectedSemesterText}. Course data for this semester may not be available yet.`);
+                          return;
+                      }
                       saved_class_array = [...class_array];
                       initializeFilterVariables();
                       populateInstructorsDropdown();
@@ -1818,6 +1829,9 @@ function conflictFunction() {
 
 function displayUnscheduledCourses() {
   const unscheduledContainer = document.querySelector('.unscheduled-course-container');
+  while (unscheduledContainer.firstChild) {
+    unscheduledContainer.removeChild(unscheduledContainer.firstChild);
+  }
 
   for (let i = 0; i < unscheduled_courses.length; i++) {
     const course = unscheduled_courses[i];
