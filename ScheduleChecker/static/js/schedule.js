@@ -1671,11 +1671,13 @@ function addToHashTable(course_object) {
       const time_slot = time_slots[j];
       if (!(day in course_hash_table)) {
         console.log("day not found");
-        console.log(day)
+        console.log(day);
+        continue;
       }
       if (!(time_slot in course_hash_table[day])) {
         console.log("time not found");
-        console.log(time_slot)
+        console.log(time_slot);
+        continue;
       }
       course_hash_table[day][time_slot].push(course_object);
     }

@@ -131,10 +131,60 @@ def get_major_requirements(request):
 
     clean_ws = lambda x: re.sub(r'\s{2,}', ' ', str(x).strip()) if x else ''
 
+    def split_br(val):
+        if not val:
+            return ['']
+        parts = [clean_ws(p) for p in re.split(r'<br\s*/?>', str(val), flags=re.IGNORECASE)]
+        return parts if parts else ['']
+
+    def narrow_down(days_raw, stime_raw, etime_raw, bldg_raw, room_raw):
+        days_list = split_br(days_raw)
+        stime_list = split_br(stime_raw)
+        etime_list = split_br(etime_raw)
+        bldg_list = split_br(bldg_raw)
+        room_list = split_br(room_raw)
+
+        count = max(len(days_list), len(stime_list), len(etime_list), len(bldg_list), len(room_list))
+        if count <= 1:
+            return days_list[0], stime_list[0], etime_list[0], bldg_list[0], room_list[0]
+
+        best_idx = 0
+        best_score = float('inf')
+        for i in range(count):
+            d = days_list[i] if i < len(days_list) else days_list[-1]
+            s = stime_list[i] if i < len(stime_list) else stime_list[-1]
+            e = etime_list[i] if i < len(etime_list) else etime_list[-1]
+            b = bldg_list[i] if i < len(bldg_list) else bldg_list[-1]
+            r = room_list[i] if i < len(room_list) else room_list[-1]
+            score = (
+                (1 if d == 'TBA' else 0) +
+                (1 if s == 'TBA' else 0) +
+                (1 if e == 'TBA' else 0) +
+                (1 if b == 'DIST' else 0) +
+                (1 if r in ('ONLINE', 'BLKBD') else 0)
+            )
+            if score < best_score:
+                best_score = score
+                best_idx = i
+
+        return (
+            days_list[best_idx] if best_idx < len(days_list) else days_list[-1],
+            stime_list[best_idx] if best_idx < len(stime_list) else stime_list[-1],
+            etime_list[best_idx] if best_idx < len(etime_list) else etime_list[-1],
+            bldg_list[best_idx] if best_idx < len(bldg_list) else bldg_list[-1],
+            room_list[best_idx] if best_idx < len(room_list) else room_list[-1],
+        )
+
     rows = []
     for rec in all_records:
-        bldg = clean_ws(rec.get('building', ''))
-        room = clean_ws(rec.get('room', ''))
+        days, stime, etime, bldg, room = narrow_down(
+            rec.get('days', ''),
+            rec.get('stime', ''),
+            rec.get('etime', ''),
+            rec.get('building', ''),
+            rec.get('room', ''),
+        )
+        instructor = split_br(rec.get('instructors', ''))[0]
 
         # Delivery method: mark ONLINE if room is ONLINE or bldg is DIST
         if room == 'ONLINE' or bldg == 'DIST':
@@ -148,12 +198,12 @@ def get_major_requirements(request):
             'Crs': clean_ws(rec.get('crs', '')),
             'Sec': clean_ws(rec.get('sec', '')),
             'Title': clean_ws(rec.get('title', '')),
-            'Days': clean_ws(rec.get('days', '')),
-            'STime': parse_time(rec.get('stime', '')),
-            'ETime': parse_time(rec.get('etime', '')),
+            'Days': days,
+            'STime': parse_time(stime),
+            'ETime': parse_time(etime),
             'Bldg': bldg,
             'Room': room,
-            'Instructor': clean_ws(rec.get('instructors', '')),
+            'Instructor': instructor,
             'DelMthd': del_mthd,
         })
 
