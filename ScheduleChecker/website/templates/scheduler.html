@@ -1,8 +1,8 @@
-    <!-- Schedule Checker Team - Austin Edwards, John Schwenke, and Conner Trouy
+<!-- Schedule Checker Team - Austin Edwards, John Schwenke, and Conner Trouy
     May 4th, 2023
     Contributions:
       This webpage was spit between Austin, Conner, and John:
-        Austin implmeneted everything outside of the calendar.
+        Austin implemented everything outside of the calendar.
         John implemented the calendar and its functionality. 
         Conner implemented the favicon-->
 
@@ -11,32 +11,33 @@
 {% load humanize %}
 
 <html>
-  <head>
-    <title>Schedule Conflict Checker</title>
-    <meta charset="utf-8">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.8/xlsx.full.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-    <link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet">
-    <script src="{% static 'js/schedule.js' %}?v=20261012b"></script>
-    <link rel="stylesheet" type='text/css' media='screen' href="{% static 'css/scheduler_style.css' %}?v=20261012b">
-    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/apple-touch-icon.png' %}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/favicon-32x32.png' %}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/favicon-16x16.png' %}">
-  </head>
+
+<head>
+  <title>Schedule Conflict Checker</title>
+  <meta charset="utf-8">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.8/xlsx.full.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet">
+  <script src="{% static 'js/schedule.js' %}?v=20261012b"></script>
+  <link rel="stylesheet" type='text/css' media='screen' href="{% static 'css/scheduler_style.css' %}?v=20261012b">
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/apple-touch-icon.png' %}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/favicon-32x32.png' %}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/favicon-16x16.png' %}">
+</head>
 
 
-  <body style="margin: 0px;">
-    <!-- Austin -->   
-    <div class="header">
-      <div class="university-title">
-        University of Alaska Anchorage
-      </div>
-      <div class="header-title">
-        Course Scheduler
-      </div>
-      <!-- <div class="profile-section">
+<body style="margin: 0px;">
+  <!-- Austin -->
+  <div class="header">
+    <div class="university-title">
+      University of Alaska Anchorage
+    </div>
+    <div class="header-title">
+      Course Scheduler
+    </div>
+    <!-- <div class="profile-section">
         <div class="profile-image">
           <img src="{% static 'images/profile-image.png' %}" alt="Profile Image">
         </div>
@@ -44,62 +45,62 @@
           Temporary Profile Name
         </div>
       </div> -->
-      <div class="dark-mode-container">
-        <div class="light-text-container">
-          <div class="light-text">Light Mode</div>
-        </div>
-        <div class="dark-mode-toggle">
-          <div class="toggle-slider"></div>
-        </div>
-        <div class="light-text-container">
-          <div class="dark-text">Dark Mode</div>
-        </div>
+    <div class="dark-mode-container">
+      <div class="light-text-container">
+        <div class="light-text">Light Mode</div>
+      </div>
+      <div class="dark-mode-toggle">
+        <div class="toggle-slider"></div>
+      </div>
+      <div class="light-text-container">
+        <div class="dark-text">Dark Mode</div>
       </div>
     </div>
-    
-    <div class="search-container">
-      <div class="select-wrapper-term">
-        <select id="semester-select" class="dropdown-toggle">
-          <optgroup label="Select Term">
-            <option value="" selected disabled hidden>Term</option>
-          </optgroup>
-        </select>
+  </div>
+
+  <div class="search-container">
+    <div class="select-wrapper-term">
+      <select id="semester-select" class="dropdown-toggle">
+        <optgroup label="Select Term">
+          <option value="" selected disabled hidden>Term</option>
+        </optgroup>
+      </select>
+      <span class="dropdown-arrow"></span>
+    </div>
+
+    <div class="select-wrapper">
+      <div class="dropdown-toggle-wrapper">
+        <button id="major-dropdown-toggle" class="dropdown-toggle">Select Major...</button>
         <span class="dropdown-arrow"></span>
-      </div>      
-    
-      <div class="select-wrapper">
-        <div class="dropdown-toggle-wrapper">
-          <button id="major-dropdown-toggle" class="dropdown-toggle">Select Major...</button>
-          <span class="dropdown-arrow"></span>
-        </div>
-        <div class="dropdown-wrapper">
-          <select id="major-dropdown" class="dropdown" multiple>
-            {% with sorted_data=degree_major_data|dictsort:'major' %}
-              {% for item in sorted_data %}
-                <option>{{ item.major }} ({{ item.degree }})</option>
-              {% endfor %}
-            {% endwith %}
-          </select>       
-        </div>
-        <div id="selected-majors"></div>
       </div>
-      
-      <div class="select-wrapper">
-        <div class="dropdown-toggle-wrapper">
-          <button id="subject-dropdown-toggle" class="dropdown-toggle">Select Subject...</button>
-          <span class="dropdown-arrow"></span>
-        </div>
-        <div class="dropdown-wrapper">
-          <select id="subject-dropdown" class="dropdown" multiple>
-            {% for item in subject_data %}
-            <option>{{ item.subj }} - {{ item.subject }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div id="selected-subjects"></div>
+      <div class="dropdown-wrapper">
+        <select id="major-dropdown" class="dropdown" multiple>
+          {% with sorted_data=degree_major_data|dictsort:'major' %}
+          {% for item in sorted_data %}
+          <option>{{ item.major }} ({{ item.degree }})</option>
+          {% endfor %}
+          {% endwith %}
+        </select>
       </div>
-      
-      <!-- <div class="select-wrapper">
+      <div id="selected-majors"></div>
+    </div>
+
+    <div class="select-wrapper">
+      <div class="dropdown-toggle-wrapper">
+        <button id="subject-dropdown-toggle" class="dropdown-toggle">Select Subject...</button>
+        <span class="dropdown-arrow"></span>
+      </div>
+      <div class="dropdown-wrapper">
+        <select id="subject-dropdown" class="dropdown" multiple>
+          {% for item in subject_data %}
+          <option>{{ item.subj }} - {{ item.subject }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div id="selected-subjects"></div>
+    </div>
+
+    <!-- <div class="select-wrapper">
         <select id="subject-dropdown" class="dropdown-toggle">
           <option value="" selected disabled hidden>Select Subject...</option>
           {% for item in subject_data %}
@@ -110,157 +111,166 @@
         <div id="selected-subjects"></div>
       </div> -->
 
-      
-      <button id="search-btn" class="search-btn">Search</button>
-      <div id="OR"> OR </div>
-      <div class="upload-btn-wrapper">
-        <button class="upload-btn" onclick="document.querySelector('input[type=file]').click()">Upload Excel</button>
-        <input type="file" accept=".xlsx" name="myfile" id="file-input" style="display:none" onchange="handleFileSelect(event)">
-      </div>
-      <div id="loading-search-container" class="loading-container">
-        <div class="spinner"></div>
-        <div id="loading-text">Scraping data, will take a few seconds...</div>
-      </div>
+
+    <button id="search-btn" class="search-btn">Search</button>
+    <div id="OR"> OR </div>
+    <div class="upload-btn-wrapper">
+      <button class="upload-btn" onclick="document.querySelector('input[type=file]').click()">Upload Excel</button>
+      <input type="file" accept=".xlsx" name="myfile" id="file-input" style="display:none"
+        onchange="handleFileSelect(event)">
     </div>
+    <div id="loading-search-container" class="loading-container">
+      <div class="spinner"></div>
+      <div id="loading-text">Scraping data, will take a few seconds...</div>
+    </div>
+  </div>
 
-    <!-- Advanced Filtering -->
-    <div class="filtering-container">
-      <div id="advanced-filtering-content" style="display: none;">
-        <form onsubmit="return false;">
-          <div class="advanced-filtering-container">
-            <div class="filtering-schedule-conflict-container ">
-              <div class="conflict-filtering">
-                <h2>Conflict Filtering Rules</h2>
-                <div class="individual-class-conflicts">
-                  <h3>Specify two courses that should never conflict</h3>
-                  <div class="individual-class-conflict-selection">
-                    <input type="text" id="conflict-1" name="conflict-1" placeholder="Course 1" list="course-suggestion" oninput="if (this.value=='Format: CSCE A101') {this.value='CSCE A101'}"/>
-                    <input type="text" id="conflict-2" name="conflict-2" placeholder="Course 2" list="course-suggestion" oninput="if (this.value=='Format: CSCE A101') {this.value='CSCE A101'}"/>
-                    <button class="add-button" id="add-individual-class-conflict">Add</button>
-                    <datalist id="course-suggestion">
-                      <option value="Format: CSCE A101"></option>
-                    </datalist>
+  <!-- Advanced Filtering -->
+  <div class="filtering-container">
+    <div id="advanced-filtering-content" style="display: none;">
+      <form onsubmit="return false;">
+        <div class="advanced-filtering-container">
+          <div class="filtering-schedule-conflict-container ">
+            <div class="conflict-filtering">
+              <h2>Conflict Filtering Rules</h2>
+              <div class="individual-class-conflicts">
+                <h3>Specify two courses that should never conflict</h3>
+                <div class="individual-class-conflict-selection">
+                  <input type="text" id="conflict-1" name="conflict-1" placeholder="Course 1" list="course-suggestion"
+                    oninput="if (this.value=='Format: CSCE A101') {this.value='CSCE A101'}" />
+                  <input type="text" id="conflict-2" name="conflict-2" placeholder="Course 2" list="course-suggestion"
+                    oninput="if (this.value=='Format: CSCE A101') {this.value='CSCE A101'}" />
+                  <button class="add-button" id="add-individual-class-conflict">Add</button>
+                  <datalist id="course-suggestion">
+                    <option value="Format: CSCE A101"></option>
                   </datalist>
-                  </div>
-                  <div id="entered-individual-course-conflict"></div>
+                  </datalist>
                 </div>
-
-                <div class="range-class-conflicts">
-                  <h3>Specify a range of courses that should never conflict</h3>
-                  <div class="range-class-conflict-selection">
-                    <input type="text" id="range-subject" name="range-subject" placeholder="Subject" list="subj-suggestion" oninput="if (this.value=='Format: CSCE') {this.value='CSCE'}"/>
-                    <input type="text" id="range-start" name="range-start" placeholder="Start" list="crs-lower-suggestion" oninput="if (this.value=='Format: A300') {this.value='A300'}"/>
-                    <input type="text" id="range-end" name="range-end" placeholder="End" list="crs-higher-suggestion" oninput="if (this.value=='Format: A699') {this.value='A699'}"/>
-                    <datalist id="subj-suggestion">
-                      <option value="Format: CSCE">
-                    </datalist>
-                    <datalist id="crs-lower-suggestion">
-                      <option value="Format: A300">
-                    </datalist>
-                    <datalist id="crs-higher-suggestion">
-                      <option value="Format: A699">
-                    </datalist>
-                    <button class="add-button" id="add-range-class-conflict">Add</button>
-                  </div>
-                  <div id="entered-range-course-conflict"></div>
-                </div>             
-
-                <div class="ignore-container">
-                  <div class="ignore-subjects">
-                    <h3>Ignore conflicts for subjects</h3>
-                    <div class="ignore-subject-selection">
-                      <input type="text" id="ignore-subject" name="ignore-subject" placeholder="Subject" list="ignore-subj-suggestion" oninput="if (this.value=='Format: WRTG') {this.value='WRTG'}"/>
-                      <datalist id="ignore-subj-suggestion">
-                        <option value="Format: WRTG">
-                      </datalist>
-                      <button class="add-button" id="add-ignore-subject">Add</button>
-                    </div>
-                    <div id="entered-ignore-subjects"></div>
-                  </div>
-                  <div class="ignore-classes">
-                    <h3>Ignore conflicts for courses</h3>
-                    <div class="ignore-class-selection">
-                      <input type="text" id="ignore-class" name="ignore-class" placeholder="Course" list="ignore-course-suggestion" oninput="if (this.value=='Format: WRTG A111') {this.value='WRTG A111'}"/>
-                      <datalist id="ignore-course-suggestion">
-                        <option value="Format: WRTG A111">
-                      </datalist>
-                      <button class="add-button" id="add-ignore-class">Add</button>
-                    </div>
-                    <div id="entered-ignore-classes"></div>
-                  </div>
-                </div>
-
+                <div id="entered-individual-course-conflict"></div>
               </div>
-              <div class="schedule-filtering">
-                <h2>Calendar Filtering</h2>
 
-                <div class="select-wrapper" id="instructor-select-wrapper">
-                  <h3>Select instructors to display</h3>
-                  <div class="dropdown-toggle-wrapper" id="instructor-dropdown-toggle-wrapper">
-                    <button id="instructor-dropdown-toggle" class="dropdown-toggle">Select Instructor...</button>
-                    <span class="dropdown-arrow" id="instructor-dropdown-arrow"></span>
-                  </div>
-                  <div class="dropdown-wrapper" id="instructor-dropdown-wrapper">
-                    <select id="instructor-dropdown" class="dropdown" multiple>
-                    </select>
-                  </div>
-                  <div id="selected-instructors"></div>
+              <div class="range-class-conflicts">
+                <h3>Specify a range of courses that should never conflict</h3>
+                <div class="range-class-conflict-selection">
+                  <input type="text" id="range-subject" name="range-subject" placeholder="Subject"
+                    list="subj-suggestion" oninput="if (this.value=='Format: CSCE') {this.value='CSCE'}" />
+                  <input type="text" id="range-start" name="range-start" placeholder="Start" list="crs-lower-suggestion"
+                    oninput="if (this.value=='Format: A300') {this.value='A300'}" />
+                  <input type="text" id="range-end" name="range-end" placeholder="End" list="crs-higher-suggestion"
+                    oninput="if (this.value=='Format: A699') {this.value='A699'}" />
+                  <datalist id="subj-suggestion">
+                    <option value="Format: CSCE">
+                  </datalist>
+                  <datalist id="crs-lower-suggestion">
+                    <option value="Format: A300">
+                  </datalist>
+                  <datalist id="crs-higher-suggestion">
+                    <option value="Format: A699">
+                  </datalist>
+                  <button class="add-button" id="add-range-class-conflict">Add</button>
                 </div>
-                
-                <div id="bldg-room-select-header">
-                  <div id="bldg-header">
-                    <h3>Select buildings and rooms to display</h3>
-                  </div>
-                  <div id="room-header">
-                    <!-- <h3>Select rooms to display</h3> -->
-                  </div>
-                </div>
-                <div class="select-wrapper" id="bldg-room-select-wrapper">
-                  <div class="dropdown-toggle-wrapper" id="bldg-dropdown-toggle-wrapper">
-                    <button id="bldg-dropdown-toggle" class="dropdown-toggle">Select Building...</button>
-                    <span class="dropdown-arrow" id="bldg-dropdown-arrow"></span>
-                    <div class="dropdown-wrapper">
-                      <select id="bldg-dropdown" class="dropdown" multiple></select>
-                    </div>
-                  </div>
-                  <div class="dropdown-toggle-wrapper" id="room-dropdown-toggle-wrapper">
-                    <button id="room-dropdown-toggle" class="dropdown-toggle">Select Room...</button>
-                    <!-- <span class="dropdown-arrow" id="room-dropdown-arrow"></span> -->
-                    <div class="dropdown-wrapper">
-                      <select id="room-dropdown" class="dropdown" multiple></select>
-                    </div>
-                  </div>
-                </div>
-                <div id="selected-bldgRoom"></div>    
-                
-                
-                <div id="subj-crs-select-header">
-                  <div id="subj-header">
-                    <h3>Select subjects and courses to display</h3>
-                  </div>
-                  <div id="crs-header">
-                    <!-- <h3>Select courses to display</h3> -->
-                  </div>
-                </div>
-                <div class="select-wrapper" id="subj-crs-select-wrapper">
-                  <div class="dropdown-toggle-wrapper" id="subj-dropdown-toggle-wrapper">
-                    <button id="subj-dropdown-toggle" class="dropdown-toggle">Select Subject...</button>
-                    <span class="dropdown-arrow" id="subj-dropdown-arrow"></span>
-                    <div class="dropdown-wrapper">
-                      <select id="subj-dropdown" class="dropdown" multiple></select>
-                    </div>
-                  </div>
-                  <div class="dropdown-toggle-wrapper" id="crs-dropdown-toggle-wrapper">
-                    <button id="crs-dropdown-toggle" class="dropdown-toggle">Select Course...</button>
-                    <!-- <span class="dropdown-arrow" id="crs-dropdown-arrow"></span> -->
-                    <div class="dropdown-wrapper">
-                      <select id="crs-dropdown" class="dropdown" multiple></select>
-                    </div>
-                  </div>
-                </div>
-                <div id="selected-subjCrs"></div>   
+                <div id="entered-range-course-conflict"></div>
+              </div>
 
-                <!-- 
+              <div class="ignore-container">
+                <div class="ignore-subjects">
+                  <h3>Ignore conflicts for subjects</h3>
+                  <div class="ignore-subject-selection">
+                    <input type="text" id="ignore-subject" name="ignore-subject" placeholder="Subject"
+                      list="ignore-subj-suggestion" oninput="if (this.value=='Format: WRTG') {this.value='WRTG'}" />
+                    <datalist id="ignore-subj-suggestion">
+                      <option value="Format: WRTG">
+                    </datalist>
+                    <button class="add-button" id="add-ignore-subject">Add</button>
+                  </div>
+                  <div id="entered-ignore-subjects"></div>
+                </div>
+                <div class="ignore-classes">
+                  <h3>Ignore conflicts for courses</h3>
+                  <div class="ignore-class-selection">
+                    <input type="text" id="ignore-class" name="ignore-class" placeholder="Course"
+                      list="ignore-course-suggestion"
+                      oninput="if (this.value=='Format: WRTG A111') {this.value='WRTG A111'}" />
+                    <datalist id="ignore-course-suggestion">
+                      <option value="Format: WRTG A111">
+                    </datalist>
+                    <button class="add-button" id="add-ignore-class">Add</button>
+                  </div>
+                  <div id="entered-ignore-classes"></div>
+                </div>
+              </div>
+
+            </div>
+            <div class="schedule-filtering">
+              <h2>Calendar Filtering</h2>
+
+              <div class="select-wrapper" id="instructor-select-wrapper">
+                <h3>Select instructors to display</h3>
+                <div class="dropdown-toggle-wrapper" id="instructor-dropdown-toggle-wrapper">
+                  <button id="instructor-dropdown-toggle" class="dropdown-toggle">Select Instructor...</button>
+                  <span class="dropdown-arrow" id="instructor-dropdown-arrow"></span>
+                </div>
+                <div class="dropdown-wrapper" id="instructor-dropdown-wrapper">
+                  <select id="instructor-dropdown" class="dropdown" multiple>
+                  </select>
+                </div>
+                <div id="selected-instructors"></div>
+              </div>
+
+              <div id="bldg-room-select-header">
+                <div id="bldg-header">
+                  <h3>Select buildings and rooms to display</h3>
+                </div>
+                <div id="room-header">
+                  <!-- <h3>Select rooms to display</h3> -->
+                </div>
+              </div>
+              <div class="select-wrapper" id="bldg-room-select-wrapper">
+                <div class="dropdown-toggle-wrapper" id="bldg-dropdown-toggle-wrapper">
+                  <button id="bldg-dropdown-toggle" class="dropdown-toggle">Select Building...</button>
+                  <span class="dropdown-arrow" id="bldg-dropdown-arrow"></span>
+                  <div class="dropdown-wrapper">
+                    <select id="bldg-dropdown" class="dropdown" multiple></select>
+                  </div>
+                </div>
+                <div class="dropdown-toggle-wrapper" id="room-dropdown-toggle-wrapper">
+                  <button id="room-dropdown-toggle" class="dropdown-toggle">Select Room...</button>
+                  <!-- <span class="dropdown-arrow" id="room-dropdown-arrow"></span> -->
+                  <div class="dropdown-wrapper">
+                    <select id="room-dropdown" class="dropdown" multiple></select>
+                  </div>
+                </div>
+              </div>
+              <div id="selected-bldgRoom"></div>
+
+
+              <div id="subj-crs-select-header">
+                <div id="subj-header">
+                  <h3>Select subjects and courses to display</h3>
+                </div>
+                <div id="crs-header">
+                  <!-- <h3>Select courses to display</h3> -->
+                </div>
+              </div>
+              <div class="select-wrapper" id="subj-crs-select-wrapper">
+                <div class="dropdown-toggle-wrapper" id="subj-dropdown-toggle-wrapper">
+                  <button id="subj-dropdown-toggle" class="dropdown-toggle">Select Subject...</button>
+                  <span class="dropdown-arrow" id="subj-dropdown-arrow"></span>
+                  <div class="dropdown-wrapper">
+                    <select id="subj-dropdown" class="dropdown" multiple></select>
+                  </div>
+                </div>
+                <div class="dropdown-toggle-wrapper" id="crs-dropdown-toggle-wrapper">
+                  <button id="crs-dropdown-toggle" class="dropdown-toggle">Select Course...</button>
+                  <!-- <span class="dropdown-arrow" id="crs-dropdown-arrow"></span> -->
+                  <div class="dropdown-wrapper">
+                    <select id="crs-dropdown" class="dropdown" multiple></select>
+                  </div>
+                </div>
+              </div>
+              <div id="selected-subjCrs"></div>
+
+              <!-- 
                 <div class="hide-container">
                   <div class="hide-subjects">
                     <h3>Hide subjects from calendar</h3>
@@ -286,33 +296,33 @@
                     <div id="entered-hide-classes"></div>
                   </div>
                 </div> -->
-              </div>
             </div>
-            <div class="apply-filter-container">
-              <button id="clear-filter">Clear</button>
-              <button id="apply-filter">Filter</button>
-            </div>
-          </form>
-        </div>
-        <div id="loading-filtering-container" class="loading-container">
-          <div class="spinner"></div>
-          <div id="loading-text">Filtering...</div>
-        </div>
-      </div>
+          </div>
+          <div class="apply-filter-container">
+            <button id="clear-filter">Clear</button>
+            <button id="apply-filter">Filter</button>
+          </div>
+      </form>
     </div>
-    <div id="toggle-advanced-filtering">
-      <div class="advanced-filtering-text">Advanced Filtering</div>
-      <span class="filter-dropdown-arrow"></span>
+    <div id="loading-filtering-container" class="loading-container">
+      <div class="spinner"></div>
+      <div id="loading-text">Filtering...</div>
     </div>
+  </div>
+  </div>
+  <div id="toggle-advanced-filtering">
+    <div class="advanced-filtering-text">Advanced Filtering</div>
+    <span class="filter-dropdown-arrow"></span>
+  </div>
 
-    <!-- Austin -->
-    <datalist id="subj-suggestion">
-      <option value="Format: CSCE">
-    </datalist>
-    <!-- John -->
+  <!-- Austin -->
+  <datalist id="subj-suggestion">
+    <option value="Format: CSCE">
+  </datalist>
+  <!-- John -->
   <!-- data-Day may need to change to a M,T,W,TH format-->
-  <div class="main-container"> 
-    <div class="main-container-left-column"> 
+  <div class="main-container">
+    <div class="main-container-left-column">
       <div class="edit-box">
         <div class="edit-box-header">Edit Course Information</div>
         <div class="edit-box-course-information">
@@ -323,19 +333,22 @@
         <div class="edit-box-content">
           <div class="form-group-left-column">
             <label for="instructor">Instructor:</label>
-            <input type="text" id="instructor" placeholder="Instructor" list="instructor-suggestion" oninput="if (this.value=='Format: Witmer F') {this.value='Witmer F'}"/>
+            <input type="text" id="instructor" placeholder="Instructor" list="instructor-suggestion"
+              oninput="if (this.value=='Format: Witmer F') {this.value='Witmer F'}" />
             <datalist id="instructor-suggestion">
               <option value="Format: Witmer F">
             </datalist>
 
             <label for="start-time">Start Time:</label>
-            <input type="text" id="start-time" placeholder="Start time" list="stime-suggestion" oninput="if (this.value=='Format: 11:30AM') {this.value='11:30AM'}"/>
+            <input type="text" id="start-time" placeholder="Start time" list="stime-suggestion"
+              oninput="if (this.value=='Format: 11:30AM') {this.value='11:30AM'}" />
             <datalist id="stime-suggestion">
               <option value="Format: 11:30AM">
             </datalist>
 
             <label for="building">Building:</label>
-            <input type="text" id="building" placeholder="Building" list="building-suggestion" oninput="if (this.value=='Format: EIB') {this.value='EIB'}"/>
+            <input type="text" id="building" placeholder="Building" list="building-suggestion"
+              oninput="if (this.value=='Format: EIB') {this.value='EIB'}" />
             <datalist id="building-suggestion">
               <option value="Format: EIB">
             </datalist>
@@ -343,19 +356,22 @@
 
           <div class="form-group-right-column">
             <label for="days">Days:</label>
-            <input type="text" id="days" placeholder="Days" list="days-suggestion" oninput="if (this.value=='Format: MW') {this.value='MW'}"/>
+            <input type="text" id="days" placeholder="Days" list="days-suggestion"
+              oninput="if (this.value=='Format: MW') {this.value='MW'}" />
             <datalist id="days-suggestion">
               <option value="Format: MW">
             </datalist>
 
             <label for="end-time">End Time:</label>
-            <input type="text" id="end-time" placeholder="End time" list="etime-suggestion" oninput="if (this.value=='Format: 12:45PM') {this.value='12:45PM'}"/>
+            <input type="text" id="end-time" placeholder="End time" list="etime-suggestion"
+              oninput="if (this.value=='Format: 12:45PM') {this.value='12:45PM'}" />
             <datalist id="etime-suggestion">
               <option value="Format: 12:45PM">
             </datalist>
 
             <label for="room">Room:</label>
-            <input type="text" id="room" placeholder="Room" list="room-suggestion" oninput="if (this.value=='Format: 209') {this.value='209'}"/>
+            <input type="text" id="room" placeholder="Room" list="room-suggestion"
+              oninput="if (this.value=='Format: 209') {this.value='209'}" />
             <datalist id="room-suggestion">
               <option value="Format: 209">
             </datalist>
@@ -397,70 +413,81 @@
       </div>
       <div class="add-box-information">
         <div class="form-group-row">
-          <input type="text" class="add-input" id="add-subj" placeholder="Subject" list="subject-suggestion" oninput="if (this.value=='Format: CSCE') {this.value='CSCE'}"/>
+          <input type="text" class="add-input" id="add-subj" placeholder="Subject" list="subject-suggestion"
+            oninput="if (this.value=='Format: CSCE') {this.value='CSCE'}" />
           <datalist id="subject-suggestion">
             <option value="Format: CSCE">
           </datalist>
 
-          <input type="text" class="add-input" id="add-crs" placeholder="Course" list="crs-suggestion" oninput="if (this.value=='Format: A123') {this.value='A123'}"/>
+          <input type="text" class="add-input" id="add-crs" placeholder="Course" list="crs-suggestion"
+            oninput="if (this.value=='Format: A123') {this.value='A123'}" />
           <datalist id="crs-suggestion">
             <option value="Format: A123">
           </datalist>
 
-          <input type="text" class="add-input" id="add-sec" placeholder="Section" list="section-suggestion" oninput="if (this.value=='Format: 123') {this.value='123'}"/>
+          <input type="text" class="add-input" id="add-sec" placeholder="Section" list="section-suggestion"
+            oninput="if (this.value=='Format: 123') {this.value='123'}" />
           <datalist id="section-suggestion">
             <option value="Format: 123">
           </datalist>
         </div>
-  
+
         <div class="form-group-row">
-          <input type="text" class="add-input" id="add-title" placeholder="Title" list="title-suggestion" oninput="if (this.value=='Format: Underwater Basket Weaving') {this.value='Underwater Basket Weaving'}"/>
+          <input type="text" class="add-input" id="add-title" placeholder="Title" list="title-suggestion"
+            oninput="if (this.value=='Format: Underwater Basket Weaving') {this.value='Underwater Basket Weaving'}" />
           <datalist id="title-suggestion">
             <option value="Format: Underwater Basket Weaving">
           </datalist>
         </div>
-  
+
         <div class="form-group-row">
-          <input type="text" class="add-input" id="add-crn" placeholder="Course CRN" list="CRN-suggestion" oninput="if (this.value=='Format: 123456') {this.value='123456'}"/>
+          <input type="text" class="add-input" id="add-crn" placeholder="Course CRN" list="CRN-suggestion"
+            oninput="if (this.value=='Format: 123456') {this.value='123456'}" />
           <datalist id="CRN-suggestion">
             <option value="Format: 123456">
           </datalist>
         </div>
-  
+
         <div class="form-group-row">
-          <input type="text" class="add-input" id="add-instructor" placeholder="Instructor" list="instructor-suggestion" oninput="if (this.value=='Format: Witmer F') {this.value='Witmer F'}"/>
+          <input type="text" class="add-input" id="add-instructor" placeholder="Instructor" list="instructor-suggestion"
+            oninput="if (this.value=='Format: Witmer F') {this.value='Witmer F'}" />
           <datalist id="instructor-suggestion">
             <option value="Format: Witmer F">
           </datalist>
-  
-          <input type="text" class="add-input" id="add-days" placeholder="Days" list="days-suggestion" oninput="if (this.value=='Format: MW') {this.value='MW'}"/>
+
+          <input type="text" class="add-input" id="add-days" placeholder="Days" list="days-suggestion"
+            oninput="if (this.value=='Format: MW') {this.value='MW'}" />
           <datalist id="days-suggestion">
             <option value="Format: MW">
           </datalist>
         </div>
-  
+
         <div class="form-group-row">
-          <input type="text" class="add-input" id="add-start-time" placeholder="Start time" list="stime-suggestion" oninput="if (this.value=='Format: 11:30AM') {this.value='11:30AM'}"/>
+          <input type="text" class="add-input" id="add-start-time" placeholder="Start time" list="stime-suggestion"
+            oninput="if (this.value=='Format: 11:30AM') {this.value='11:30AM'}" />
           <datalist id="stime-suggestion">
             <option value="Format: 11:30AM">
           </datalist>
-  
-          <input type="text" class="add-input" id="add-end-time" placeholder="End time" list="etime-suggestion" oninput="if (this.value=='Format: 12:45PM') {this.value='12:45PM'}"/>
+
+          <input type="text" class="add-input" id="add-end-time" placeholder="End time" list="etime-suggestion"
+            oninput="if (this.value=='Format: 12:45PM') {this.value='12:45PM'}" />
           <datalist id="etime-suggestion">
             <option value="Format: 12:45PM">
           </datalist>
         </div>
-  
+
         <div class="form-group-row">
-          <input type="text" class="add-input" id="add-building" placeholder="Building" list="building-suggestion" oninput="if (this.value=='Format: EIB') {this.value='EIB'}"/>
+          <input type="text" class="add-input" id="add-building" placeholder="Building" list="building-suggestion"
+            oninput="if (this.value=='Format: EIB') {this.value='EIB'}" />
           <datalist id="building-suggestion">
             <option value="Format: EIB">
-          </datalist>     
-          
-          <input type="text" class="add-input" id="add-room" placeholder="Room" list="room-suggestion" oninput="if (this.value=='Format: 209') {this.value='209'}"/>
+          </datalist>
+
+          <input type="text" class="add-input" id="add-room" placeholder="Room" list="room-suggestion"
+            oninput="if (this.value=='Format: 209') {this.value='209'}" />
           <datalist id="room-suggestion">
             <option value="Format: 209">
-          </datalist> 
+          </datalist>
         </div>
         <div class="button-row">
           <button class="add-course-button">Add Course</button>
@@ -473,45 +500,55 @@
       <div class="schedule-grid">
         <div class="days-row">
           <div class="blank"></div>
-          <div class="days"><h2>Monday</h2></div>
-          <div class="days"><h2>Tuesday</h2></div>
-          <div class="days"><h2>Wednesday</h2></div>
-          <div class="days"><h2>Thursday</h2></div>
-          <div class="days"><h2>Friday</h2></div>
+          <div class="days">
+            <h2>Monday</h2>
+          </div>
+          <div class="days">
+            <h2>Tuesday</h2>
+          </div>
+          <div class="days">
+            <h2>Wednesday</h2>
+          </div>
+          <div class="days">
+            <h2>Thursday</h2>
+          </div>
+          <div class="days">
+            <h2>Friday</h2>
+          </div>
           <!-- <div class="days">Saturday</div>
           <div class="days">Sunday</div> -->
         </div>
         <div class="grid-row">
           <div class="times">8am</div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="M" data-time="0800"></div>
-            <div class = "time-cell" data-day="M" data-time="0815"></div>
-            <div class = "time-cell" data-day="M" data-time="0830"></div>
-            <div class = "time-cell" data-day="M" data-time="0845"></div>
+            <div class="time-cell" data-day="M" data-time="0800"></div>
+            <div class="time-cell" data-day="M" data-time="0815"></div>
+            <div class="time-cell" data-day="M" data-time="0830"></div>
+            <div class="time-cell" data-day="M" data-time="0845"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="T" data-time="0800"></div>
-            <div class = "time-cell" data-day="T" data-time="0815"></div>
-            <div class = "time-cell" data-day="T" data-time="0830"></div>
-            <div class = "time-cell" data-day="T" data-time="0845"></div>
+            <div class="time-cell" data-day="T" data-time="0800"></div>
+            <div class="time-cell" data-day="T" data-time="0815"></div>
+            <div class="time-cell" data-day="T" data-time="0830"></div>
+            <div class="time-cell" data-day="T" data-time="0845"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="W" data-time="0800"></div>
-            <div class = "time-cell" data-day="W" data-time="0815"></div>
-            <div class = "time-cell" data-day="W" data-time="0830"></div>
-            <div class = "time-cell" data-day="W" data-time="0845"></div>
+            <div class="time-cell" data-day="W" data-time="0800"></div>
+            <div class="time-cell" data-day="W" data-time="0815"></div>
+            <div class="time-cell" data-day="W" data-time="0830"></div>
+            <div class="time-cell" data-day="W" data-time="0845"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="R" data-time="0800"></div>
-            <div class = "time-cell" data-day="R" data-time="0815"></div>
-            <div class = "time-cell" data-day="R" data-time="0830"></div>
-            <div class = "time-cell" data-day="R" data-time="0845"></div>
+            <div class="time-cell" data-day="R" data-time="0800"></div>
+            <div class="time-cell" data-day="R" data-time="0815"></div>
+            <div class="time-cell" data-day="R" data-time="0830"></div>
+            <div class="time-cell" data-day="R" data-time="0845"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="F" data-time="0800"></div>
-            <div class = "time-cell" data-day="F" data-time="0815"></div>
-            <div class = "time-cell" data-day="F" data-time="0830"></div>
-            <div class = "time-cell" data-day="F" data-time="0845"></div>
+            <div class="time-cell" data-day="F" data-time="0800"></div>
+            <div class="time-cell" data-day="F" data-time="0815"></div>
+            <div class="time-cell" data-day="F" data-time="0830"></div>
+            <div class="time-cell" data-day="F" data-time="0845"></div>
           </div>
           <!-- <div class="grid-cell">
             <div class = "time-cell" data-day="SA" data-time="0800"></div>
@@ -537,34 +574,34 @@
         <div class="grid-row">
           <div class="times">9am</div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="M" data-time="0900"></div>
-            <div class = "time-cell" data-day="M" data-time="0915"></div>
-            <div class = "time-cell" data-day="M" data-time="0930"></div>
-            <div class = "time-cell" data-day="M" data-time="0945"></div>
+            <div class="time-cell" data-day="M" data-time="0900"></div>
+            <div class="time-cell" data-day="M" data-time="0915"></div>
+            <div class="time-cell" data-day="M" data-time="0930"></div>
+            <div class="time-cell" data-day="M" data-time="0945"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="T" data-time="0900"></div>
-            <div class = "time-cell" data-day="T" data-time="0915"></div>
-            <div class = "time-cell" data-day="T" data-time="0930"></div>
-            <div class = "time-cell" data-day="T" data-time="0945"></div>
+            <div class="time-cell" data-day="T" data-time="0900"></div>
+            <div class="time-cell" data-day="T" data-time="0915"></div>
+            <div class="time-cell" data-day="T" data-time="0930"></div>
+            <div class="time-cell" data-day="T" data-time="0945"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="W" data-time="0900"></div>
-            <div class = "time-cell" data-day="W" data-time="0915"></div>
-            <div class = "time-cell" data-day="W" data-time="0930"></div>
-            <div class = "time-cell" data-day="W" data-time="0945"></div>
+            <div class="time-cell" data-day="W" data-time="0900"></div>
+            <div class="time-cell" data-day="W" data-time="0915"></div>
+            <div class="time-cell" data-day="W" data-time="0930"></div>
+            <div class="time-cell" data-day="W" data-time="0945"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="R" data-time="0900"></div>
-            <div class = "time-cell" data-day="R" data-time="0915"></div>
-            <div class = "time-cell" data-day="R" data-time="0930"></div>
-            <div class = "time-cell" data-day="R" data-time="0945"></div>
+            <div class="time-cell" data-day="R" data-time="0900"></div>
+            <div class="time-cell" data-day="R" data-time="0915"></div>
+            <div class="time-cell" data-day="R" data-time="0930"></div>
+            <div class="time-cell" data-day="R" data-time="0945"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="F" data-time="0900"></div>
-            <div class = "time-cell" data-day="F" data-time="0915"></div>
-            <div class = "time-cell" data-day="F" data-time="0930"></div>
-            <div class = "time-cell" data-day="F" data-time="0945"></div>
+            <div class="time-cell" data-day="F" data-time="0900"></div>
+            <div class="time-cell" data-day="F" data-time="0915"></div>
+            <div class="time-cell" data-day="F" data-time="0930"></div>
+            <div class="time-cell" data-day="F" data-time="0945"></div>
           </div>
           <!-- <div class="grid-cell">
             <div class = "time-cell" data-day="SA" data-time="1000"></div>
@@ -590,34 +627,34 @@
         <div class="grid-row">
           <div class="times">10am</div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="M" data-time="1000"></div>
-            <div class = "time-cell" data-day="M" data-time="1015"></div>
-            <div class = "time-cell" data-day="M" data-time="1030"></div>
-            <div class = "time-cell" data-day="M" data-time="1045"></div>
+            <div class="time-cell" data-day="M" data-time="1000"></div>
+            <div class="time-cell" data-day="M" data-time="1015"></div>
+            <div class="time-cell" data-day="M" data-time="1030"></div>
+            <div class="time-cell" data-day="M" data-time="1045"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="T" data-time="1000"></div>
-            <div class = "time-cell" data-day="T" data-time="1015"></div>
-            <div class = "time-cell" data-day="T" data-time="1030"></div>
-            <div class = "time-cell" data-day="T" data-time="1045"></div>
+            <div class="time-cell" data-day="T" data-time="1000"></div>
+            <div class="time-cell" data-day="T" data-time="1015"></div>
+            <div class="time-cell" data-day="T" data-time="1030"></div>
+            <div class="time-cell" data-day="T" data-time="1045"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="W" data-time="1000"></div>
-            <div class = "time-cell" data-day="W" data-time="1015"></div>
-            <div class = "time-cell" data-day="W" data-time="1030"></div>
-            <div class = "time-cell" data-day="W" data-time="1045"></div>
+            <div class="time-cell" data-day="W" data-time="1000"></div>
+            <div class="time-cell" data-day="W" data-time="1015"></div>
+            <div class="time-cell" data-day="W" data-time="1030"></div>
+            <div class="time-cell" data-day="W" data-time="1045"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="R" data-time="1000"></div>
-            <div class = "time-cell" data-day="R" data-time="1015"></div>
-            <div class = "time-cell" data-day="R" data-time="1030"></div>
-            <div class = "time-cell" data-day="R" data-time="1045"></div>
+            <div class="time-cell" data-day="R" data-time="1000"></div>
+            <div class="time-cell" data-day="R" data-time="1015"></div>
+            <div class="time-cell" data-day="R" data-time="1030"></div>
+            <div class="time-cell" data-day="R" data-time="1045"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="F" data-time="1000"></div>
-            <div class = "time-cell" data-day="F" data-time="1015"></div>
-            <div class = "time-cell" data-day="F" data-time="1030"></div>
-            <div class = "time-cell" data-day="F" data-time="1045"></div>
+            <div class="time-cell" data-day="F" data-time="1000"></div>
+            <div class="time-cell" data-day="F" data-time="1015"></div>
+            <div class="time-cell" data-day="F" data-time="1030"></div>
+            <div class="time-cell" data-day="F" data-time="1045"></div>
           </div>
           <!-- <div class="grid-cell">
             <div class = "time-cell" data-day="SA" data-time="1200"></div>
@@ -643,34 +680,34 @@
         <div class="grid-row">
           <div class="times">11am</div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="M" data-time="1100"></div>
-            <div class = "time-cell" data-day="M" data-time="1115"></div>
-            <div class = "time-cell" data-day="M" data-time="1130"></div>
-            <div class = "time-cell" data-day="M" data-time="1145"></div>
+            <div class="time-cell" data-day="M" data-time="1100"></div>
+            <div class="time-cell" data-day="M" data-time="1115"></div>
+            <div class="time-cell" data-day="M" data-time="1130"></div>
+            <div class="time-cell" data-day="M" data-time="1145"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="T" data-time="1100"></div>
-            <div class = "time-cell" data-day="T" data-time="1115"></div>
-            <div class = "time-cell" data-day="T" data-time="1130"></div>
-            <div class = "time-cell" data-day="T" data-time="1145"></div>
+            <div class="time-cell" data-day="T" data-time="1100"></div>
+            <div class="time-cell" data-day="T" data-time="1115"></div>
+            <div class="time-cell" data-day="T" data-time="1130"></div>
+            <div class="time-cell" data-day="T" data-time="1145"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="W" data-time="1100"></div>
-            <div class = "time-cell" data-day="W" data-time="1115"></div>
-            <div class = "time-cell" data-day="W" data-time="1130"></div>
-            <div class = "time-cell" data-day="W" data-time="1145"></div>
+            <div class="time-cell" data-day="W" data-time="1100"></div>
+            <div class="time-cell" data-day="W" data-time="1115"></div>
+            <div class="time-cell" data-day="W" data-time="1130"></div>
+            <div class="time-cell" data-day="W" data-time="1145"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="R" data-time="1100"></div>
-            <div class = "time-cell" data-day="R" data-time="1115"></div>
-            <div class = "time-cell" data-day="R" data-time="1130"></div>
-            <div class = "time-cell" data-day="R" data-time="1145"></div>
+            <div class="time-cell" data-day="R" data-time="1100"></div>
+            <div class="time-cell" data-day="R" data-time="1115"></div>
+            <div class="time-cell" data-day="R" data-time="1130"></div>
+            <div class="time-cell" data-day="R" data-time="1145"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="F" data-time="1100"></div>
-            <div class = "time-cell" data-day="F" data-time="1115"></div>
-            <div class = "time-cell" data-day="F" data-time="1130"></div>
-            <div class = "time-cell" data-day="F" data-time="1145"></div>
+            <div class="time-cell" data-day="F" data-time="1100"></div>
+            <div class="time-cell" data-day="F" data-time="1115"></div>
+            <div class="time-cell" data-day="F" data-time="1130"></div>
+            <div class="time-cell" data-day="F" data-time="1145"></div>
           </div>
           <!-- <div class="grid-cell">
             <div class = "time-cell" data-day="SA" data-time="1400"></div>
@@ -696,34 +733,34 @@
         <div class="grid-row">
           <div class="times">12pm</div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="M" data-time="1200"></div>
-            <div class = "time-cell" data-day="M" data-time="1215"></div>
-            <div class = "time-cell" data-day="M" data-time="1230"></div>
-            <div class = "time-cell" data-day="M" data-time="1245"></div>
+            <div class="time-cell" data-day="M" data-time="1200"></div>
+            <div class="time-cell" data-day="M" data-time="1215"></div>
+            <div class="time-cell" data-day="M" data-time="1230"></div>
+            <div class="time-cell" data-day="M" data-time="1245"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="T" data-time="1200"></div>
-            <div class = "time-cell" data-day="T" data-time="1215"></div>
-            <div class = "time-cell" data-day="T" data-time="1230"></div>
-            <div class = "time-cell" data-day="T" data-time="1245"></div>
+            <div class="time-cell" data-day="T" data-time="1200"></div>
+            <div class="time-cell" data-day="T" data-time="1215"></div>
+            <div class="time-cell" data-day="T" data-time="1230"></div>
+            <div class="time-cell" data-day="T" data-time="1245"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="W" data-time="1200"></div>
-            <div class = "time-cell" data-day="W" data-time="1215"></div>
-            <div class = "time-cell" data-day="W" data-time="1230"></div>
-            <div class = "time-cell" data-day="W" data-time="1245"></div>
+            <div class="time-cell" data-day="W" data-time="1200"></div>
+            <div class="time-cell" data-day="W" data-time="1215"></div>
+            <div class="time-cell" data-day="W" data-time="1230"></div>
+            <div class="time-cell" data-day="W" data-time="1245"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="R" data-time="1200"></div>
-            <div class = "time-cell" data-day="R" data-time="1215"></div>
-            <div class = "time-cell" data-day="R" data-time="1230"></div>
-            <div class = "time-cell" data-day="R" data-time="1245"></div>
+            <div class="time-cell" data-day="R" data-time="1200"></div>
+            <div class="time-cell" data-day="R" data-time="1215"></div>
+            <div class="time-cell" data-day="R" data-time="1230"></div>
+            <div class="time-cell" data-day="R" data-time="1245"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="F" data-time="1200"></div>
-            <div class = "time-cell" data-day="F" data-time="1215"></div>
-            <div class = "time-cell" data-day="F" data-time="1230"></div>
-            <div class = "time-cell" data-day="F" data-time="1245"></div>
+            <div class="time-cell" data-day="F" data-time="1200"></div>
+            <div class="time-cell" data-day="F" data-time="1215"></div>
+            <div class="time-cell" data-day="F" data-time="1230"></div>
+            <div class="time-cell" data-day="F" data-time="1245"></div>
           </div>
           <!-- <div class="grid-cell">
             <div class = "time-cell" data-day="SA" data-time="1600"></div>
@@ -749,34 +786,34 @@
         <div class="grid-row">
           <div class="times">1pm</div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="M" data-time="1300"></div>
-            <div class = "time-cell" data-day="M" data-time="1315"></div>
-            <div class = "time-cell" data-day="M" data-time="1330"></div>
-            <div class = "time-cell" data-day="M" data-time="1345"></div>
+            <div class="time-cell" data-day="M" data-time="1300"></div>
+            <div class="time-cell" data-day="M" data-time="1315"></div>
+            <div class="time-cell" data-day="M" data-time="1330"></div>
+            <div class="time-cell" data-day="M" data-time="1345"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="T" data-time="1300"></div>
-            <div class = "time-cell" data-day="T" data-time="1315"></div>
-            <div class = "time-cell" data-day="T" data-time="1330"></div>
-            <div class = "time-cell" data-day="T" data-time="1345"></div>
+            <div class="time-cell" data-day="T" data-time="1300"></div>
+            <div class="time-cell" data-day="T" data-time="1315"></div>
+            <div class="time-cell" data-day="T" data-time="1330"></div>
+            <div class="time-cell" data-day="T" data-time="1345"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="W" data-time="1300"></div>
-            <div class = "time-cell" data-day="W" data-time="1315"></div>
-            <div class = "time-cell" data-day="W" data-time="1330"></div>
-            <div class = "time-cell" data-day="W" data-time="1345"></div>
+            <div class="time-cell" data-day="W" data-time="1300"></div>
+            <div class="time-cell" data-day="W" data-time="1315"></div>
+            <div class="time-cell" data-day="W" data-time="1330"></div>
+            <div class="time-cell" data-day="W" data-time="1345"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="R" data-time="1300"></div>
-            <div class = "time-cell" data-day="R" data-time="1315"></div>
-            <div class = "time-cell" data-day="R" data-time="1330"></div>
-            <div class = "time-cell" data-day="R" data-time="1345"></div>
+            <div class="time-cell" data-day="R" data-time="1300"></div>
+            <div class="time-cell" data-day="R" data-time="1315"></div>
+            <div class="time-cell" data-day="R" data-time="1330"></div>
+            <div class="time-cell" data-day="R" data-time="1345"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="F" data-time="1300"></div>
-            <div class = "time-cell" data-day="F" data-time="1315"></div>
-            <div class = "time-cell" data-day="F" data-time="1330"></div>
-            <div class = "time-cell" data-day="F" data-time="1345"></div>
+            <div class="time-cell" data-day="F" data-time="1300"></div>
+            <div class="time-cell" data-day="F" data-time="1315"></div>
+            <div class="time-cell" data-day="F" data-time="1330"></div>
+            <div class="time-cell" data-day="F" data-time="1345"></div>
           </div>
           <!-- <div class="grid-cell">
             <div class = "time-cell" data-day="SA" data-time="1800"></div>
@@ -802,34 +839,34 @@
         <div class="grid-row">
           <div class="times">2pm</div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="M" data-time="1400"></div>
-            <div class = "time-cell" data-day="M" data-time="1415"></div>
-            <div class = "time-cell" data-day="M" data-time="1430"></div>
-            <div class = "time-cell" data-day="M" data-time="1445"></div>
+            <div class="time-cell" data-day="M" data-time="1400"></div>
+            <div class="time-cell" data-day="M" data-time="1415"></div>
+            <div class="time-cell" data-day="M" data-time="1430"></div>
+            <div class="time-cell" data-day="M" data-time="1445"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="T" data-time="1400"></div>
-            <div class = "time-cell" data-day="T" data-time="1415"></div>
-            <div class = "time-cell" data-day="T" data-time="1430"></div>
-            <div class = "time-cell" data-day="T" data-time="1445"></div>
+            <div class="time-cell" data-day="T" data-time="1400"></div>
+            <div class="time-cell" data-day="T" data-time="1415"></div>
+            <div class="time-cell" data-day="T" data-time="1430"></div>
+            <div class="time-cell" data-day="T" data-time="1445"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="W" data-time="1400"></div>
-            <div class = "time-cell" data-day="W" data-time="1415"></div>
-            <div class = "time-cell" data-day="W" data-time="1430"></div>
-            <div class = "time-cell" data-day="W" data-time="1445"></div>
+            <div class="time-cell" data-day="W" data-time="1400"></div>
+            <div class="time-cell" data-day="W" data-time="1415"></div>
+            <div class="time-cell" data-day="W" data-time="1430"></div>
+            <div class="time-cell" data-day="W" data-time="1445"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="R" data-time="1400"></div>
-            <div class = "time-cell" data-day="R" data-time="1415"></div>
-            <div class = "time-cell" data-day="R" data-time="1430"></div>
-            <div class = "time-cell" data-day="R" data-time="1445"></div>
+            <div class="time-cell" data-day="R" data-time="1400"></div>
+            <div class="time-cell" data-day="R" data-time="1415"></div>
+            <div class="time-cell" data-day="R" data-time="1430"></div>
+            <div class="time-cell" data-day="R" data-time="1445"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="F" data-time="1400"></div>
-            <div class = "time-cell" data-day="F" data-time="1415"></div>
-            <div class = "time-cell" data-day="F" data-time="1430"></div>
-            <div class = "time-cell" data-day="F" data-time="1445"></div>
+            <div class="time-cell" data-day="F" data-time="1400"></div>
+            <div class="time-cell" data-day="F" data-time="1415"></div>
+            <div class="time-cell" data-day="F" data-time="1430"></div>
+            <div class="time-cell" data-day="F" data-time="1445"></div>
           </div>
           <!-- <div class="grid-cell">
             <div class = "time-cell" data-day="SA" data-time="1800"></div>
@@ -855,34 +892,34 @@
         <div class="grid-row">
           <div class="times">3pm</div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="M" data-time="1500"></div>
-            <div class = "time-cell" data-day="M" data-time="1515"></div>
-            <div class = "time-cell" data-day="M" data-time="1530"></div>
-            <div class = "time-cell" data-day="M" data-time="1545"></div>
+            <div class="time-cell" data-day="M" data-time="1500"></div>
+            <div class="time-cell" data-day="M" data-time="1515"></div>
+            <div class="time-cell" data-day="M" data-time="1530"></div>
+            <div class="time-cell" data-day="M" data-time="1545"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="T" data-time="1500"></div>
-            <div class = "time-cell" data-day="T" data-time="1515"></div>
-            <div class = "time-cell" data-day="T" data-time="1530"></div>
-            <div class = "time-cell" data-day="T" data-time="1545"></div>
+            <div class="time-cell" data-day="T" data-time="1500"></div>
+            <div class="time-cell" data-day="T" data-time="1515"></div>
+            <div class="time-cell" data-day="T" data-time="1530"></div>
+            <div class="time-cell" data-day="T" data-time="1545"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="W" data-time="1500"></div>
-            <div class = "time-cell" data-day="W" data-time="1515"></div>
-            <div class = "time-cell" data-day="W" data-time="1530"></div>
-            <div class = "time-cell" data-day="W" data-time="1545"></div>
+            <div class="time-cell" data-day="W" data-time="1500"></div>
+            <div class="time-cell" data-day="W" data-time="1515"></div>
+            <div class="time-cell" data-day="W" data-time="1530"></div>
+            <div class="time-cell" data-day="W" data-time="1545"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="R" data-time="1500"></div>
-            <div class = "time-cell" data-day="R" data-time="1515"></div>
-            <div class = "time-cell" data-day="R" data-time="1530"></div>
-            <div class = "time-cell" data-day="R" data-time="1545"></div>
+            <div class="time-cell" data-day="R" data-time="1500"></div>
+            <div class="time-cell" data-day="R" data-time="1515"></div>
+            <div class="time-cell" data-day="R" data-time="1530"></div>
+            <div class="time-cell" data-day="R" data-time="1545"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="F" data-time="1500"></div>
-            <div class = "time-cell" data-day="F" data-time="1515"></div>
-            <div class = "time-cell" data-day="F" data-time="1530"></div>
-            <div class = "time-cell" data-day="F" data-time="1545"></div>
+            <div class="time-cell" data-day="F" data-time="1500"></div>
+            <div class="time-cell" data-day="F" data-time="1515"></div>
+            <div class="time-cell" data-day="F" data-time="1530"></div>
+            <div class="time-cell" data-day="F" data-time="1545"></div>
           </div>
           <!-- <div class="grid-cell">
             <div class = "time-cell" data-day="SA" data-time="1800"></div>
@@ -908,34 +945,34 @@
         <div class="grid-row">
           <div class="times">4pm</div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="M" data-time="1600"></div>
-            <div class = "time-cell" data-day="M" data-time="1615"></div>
-            <div class = "time-cell" data-day="M" data-time="1630"></div>
-            <div class = "time-cell" data-day="M" data-time="1645"></div>
+            <div class="time-cell" data-day="M" data-time="1600"></div>
+            <div class="time-cell" data-day="M" data-time="1615"></div>
+            <div class="time-cell" data-day="M" data-time="1630"></div>
+            <div class="time-cell" data-day="M" data-time="1645"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="T" data-time="1600"></div>
-            <div class = "time-cell" data-day="T" data-time="1615"></div>
-            <div class = "time-cell" data-day="T" data-time="1630"></div>
-            <div class = "time-cell" data-day="T" data-time="1645"></div>
+            <div class="time-cell" data-day="T" data-time="1600"></div>
+            <div class="time-cell" data-day="T" data-time="1615"></div>
+            <div class="time-cell" data-day="T" data-time="1630"></div>
+            <div class="time-cell" data-day="T" data-time="1645"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="W" data-time="1600"></div>
-            <div class = "time-cell" data-day="W" data-time="1615"></div>
-            <div class = "time-cell" data-day="W" data-time="1630"></div>
-            <div class = "time-cell" data-day="W" data-time="1645"></div>
+            <div class="time-cell" data-day="W" data-time="1600"></div>
+            <div class="time-cell" data-day="W" data-time="1615"></div>
+            <div class="time-cell" data-day="W" data-time="1630"></div>
+            <div class="time-cell" data-day="W" data-time="1645"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="R" data-time="1600"></div>
-            <div class = "time-cell" data-day="R" data-time="1615"></div>
-            <div class = "time-cell" data-day="R" data-time="1630"></div>
-            <div class = "time-cell" data-day="R" data-time="1645"></div>
+            <div class="time-cell" data-day="R" data-time="1600"></div>
+            <div class="time-cell" data-day="R" data-time="1615"></div>
+            <div class="time-cell" data-day="R" data-time="1630"></div>
+            <div class="time-cell" data-day="R" data-time="1645"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="F" data-time="1600"></div>
-            <div class = "time-cell" data-day="F" data-time="1615"></div>
-            <div class = "time-cell" data-day="F" data-time="1630"></div>
-            <div class = "time-cell" data-day="F" data-time="1645"></div>
+            <div class="time-cell" data-day="F" data-time="1600"></div>
+            <div class="time-cell" data-day="F" data-time="1615"></div>
+            <div class="time-cell" data-day="F" data-time="1630"></div>
+            <div class="time-cell" data-day="F" data-time="1645"></div>
           </div>
           <!-- <div class="grid-cell">
             <div class = "time-cell" data-day="SA" data-time="1800"></div>
@@ -961,34 +998,34 @@
         <div class="grid-row">
           <div class="times">5pm</div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="M" data-time="1700"></div>
-            <div class = "time-cell" data-day="M" data-time="1715"></div>
-            <div class = "time-cell" data-day="M" data-time="1730"></div>
-            <div class = "time-cell" data-day="M" data-time="1745"></div>
+            <div class="time-cell" data-day="M" data-time="1700"></div>
+            <div class="time-cell" data-day="M" data-time="1715"></div>
+            <div class="time-cell" data-day="M" data-time="1730"></div>
+            <div class="time-cell" data-day="M" data-time="1745"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="T" data-time="1700"></div>
-            <div class = "time-cell" data-day="T" data-time="1715"></div>
-            <div class = "time-cell" data-day="T" data-time="1730"></div>
-            <div class = "time-cell" data-day="T" data-time="1745"></div>
+            <div class="time-cell" data-day="T" data-time="1700"></div>
+            <div class="time-cell" data-day="T" data-time="1715"></div>
+            <div class="time-cell" data-day="T" data-time="1730"></div>
+            <div class="time-cell" data-day="T" data-time="1745"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="W" data-time="1700"></div>
-            <div class = "time-cell" data-day="W" data-time="1715"></div>
-            <div class = "time-cell" data-day="W" data-time="1730"></div>
-            <div class = "time-cell" data-day="W" data-time="1745"></div>
+            <div class="time-cell" data-day="W" data-time="1700"></div>
+            <div class="time-cell" data-day="W" data-time="1715"></div>
+            <div class="time-cell" data-day="W" data-time="1730"></div>
+            <div class="time-cell" data-day="W" data-time="1745"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="R" data-time="1700"></div>
-            <div class = "time-cell" data-day="R" data-time="1715"></div>
-            <div class = "time-cell" data-day="R" data-time="1730"></div>
-            <div class = "time-cell" data-day="R" data-time="1745"></div>
+            <div class="time-cell" data-day="R" data-time="1700"></div>
+            <div class="time-cell" data-day="R" data-time="1715"></div>
+            <div class="time-cell" data-day="R" data-time="1730"></div>
+            <div class="time-cell" data-day="R" data-time="1745"></div>
           </div>
           <div class="grid-cell">
-            <div class = "time-cell" data-day="F" data-time="1700"></div>
-            <div class = "time-cell" data-day="F" data-time="1715"></div>
-            <div class = "time-cell" data-day="F" data-time="1730"></div>
-            <div class = "time-cell" data-day="F" data-time="1745"></div>
+            <div class="time-cell" data-day="F" data-time="1700"></div>
+            <div class="time-cell" data-day="F" data-time="1715"></div>
+            <div class="time-cell" data-day="F" data-time="1730"></div>
+            <div class="time-cell" data-day="F" data-time="1745"></div>
           </div>
           <!-- <div class="grid-cell">
             <div class = "time-cell" data-day="SA" data-time="1800"></div>
@@ -1033,18 +1070,22 @@
     <!-- <div class="course-tiles" id="course-tiles"style="display: none;"></div> -->
   </div>
 
-    <!-- Footer -->
+  <!-- Footer -->
   <footer class="footer">
     <div id="footer-left-column">
       <section id="about-us">
-        <h2 id="about-us-text">About Us</h2>
-        <p>Welcome! We're a group of Computer Science students at the University of Alaska Anchorage. As part of our senior project, we've developed a course scheduling website specifically for professors.</p>
-        <p>Our goal is to provide a simple and intuitive platform that makes managing course schedules a breeze. We've put a lot of effort into designing a user-friendly interface and implementing key features to make scheduling easier than ever.</p>
-        <p>We hope you find our website useful and efficient. If you have any questions or feedback, please feel free to <a id="email-link"href="mailto:uaa.csce.schedule@gmail.com">reach out to us</a>. We're always looking to improve and provide the best service possible.</p>
+        <h2 id="about-us-text">About this website</h2>
+        <p>The original version of this website was developed the UAA Capstone Team during the Spring 2023 semester. The
+          project was designed to help the Department of Computer Science & Engineering schedule courses for the next
+          semester. It should work for any scheduler at UAA.</p>
+        <p>Frank Witmer forked their repo and now maintains the current version of this repo here: <a
+            href="https://github.com/fwitmer/course-schedule-check">https://github.com/fwitmer/course-schedule-check</a>.
+          Please send any bugs or feature requests to him.</p>
       </section>
       <div class="license-container">
         <div class="license-text">
-          The contents and source code of this website are licensed by <a id="license" href="https://choosealicense.com/licenses/gpl-3.0/">unGNU General Public License v3.0</a>.
+          The contents and source code of this website are licensed by <a id="license"
+            href="https://choosealicense.com/licenses/gpl-3.0/">unGNU General Public License v3.0</a>.
         </div>
       </div>
 
@@ -1057,57 +1098,69 @@
             <button></button>
           </div>
           <!-- Insert terms and conditions content here -->
-          <h2 class="terms-header">By using this website, you agree to be bound by the following terms and conditions:</p>
-          <h2 class="terms-header">Terms and Conditions of Use</h2>
-          <p class="term-content">You must use this website in compliance with all applicable laws and regulations.  Any posted content must not infringe on the rights of any third party or violate any laws or regulations.  The website owner reserves the right to terminate your access to the site at any time, for any reason, without notice.</p>
-          <h2 class="terms-header"> Limitations of Liability </h2>
-          <p class="term-content">This website is provided on an "as is" basis and we make no representations or warranties of any kind, express or implied, as to the operation of the website or the information, content, materials, or products included on the website. We will not be liable for any damages of any kind arising from the use of this website, including, but not limited to, direct, indirect, incidental, punitive, and consequential damages.</p>
-          <h2 class="terms-header">Privacy Policy</h2>
-          <p class="term-content">We do not collect any personal information from users, but may collect non-personal information for site optimization. We do not share any information collected with third parties except as required by law.  This website does not use cookies or other tracking technologies.</p>
-          <h2 class="terms-header">Applicable Intellectual Property Considerations</h2>
-          <p class="term-content">The contents of this website, including but not limited to text, graphics, logos, images, and software, are licensed under the unGNU General Public License v3.0. You may use and distribute the content in accordance with the terms of the license.</p>
-          <h2 class="terms-header">Dates of Last Content Update</h2>
-          <p class="term-content">The content of this website was last updated on May 3, 2023.</p>
+          <h2 class="terms-header">By using this website, you agree to be bound by the following terms and conditions:
+            </p>
+            <h2 class="terms-header">Terms and Conditions of Use</h2>
+            <p class="term-content">You must use this website in compliance with all applicable laws and regulations.
+              Any posted content must not infringe on the rights of any third party or violate any laws or regulations.
+              The website owner reserves the right to terminate your access to the site at any time, for any reason,
+              without notice.</p>
+            <h2 class="terms-header"> Limitations of Liability </h2>
+            <p class="term-content">This website is provided on an "as is" basis and we make no representations or
+              warranties of any kind, express or implied, as to the operation of the website or the information,
+              content, materials, or products included on the website. We will not be liable for any damages of any kind
+              arising from the use of this website, including, but not limited to, direct, indirect, incidental,
+              punitive, and consequential damages.</p>
+            <h2 class="terms-header">Privacy Policy</h2>
+            <p class="term-content">We do not collect any personal information from users, but may collect non-personal
+              information for site optimization. We do not share any information collected with third parties except as
+              required by law. This website does not use cookies or other tracking technologies.</p>
+            <h2 class="terms-header">Applicable Intellectual Property Considerations</h2>
+            <p class="term-content">The contents of this website, including but not limited to text, graphics, logos,
+              images, and software, are licensed under the unGNU General Public License v3.0. You may use and distribute
+              the content in accordance with the terms of the license.</p>
+            <h2 class="terms-header">Dates of Last Content Update</h2>
+            <p class="term-content">The content of this website was last updated on May 3, 2023.</p>
         </div>
       </div>
     </div>
     <div id="footer-right-column">
       <div id="our-team-container">
-        <h2 id="our-team-text">Our Team</h2>
-          <div class="team-member">
-            <h3 id="member-name">Austin Edwards</h3>
-            <p>
-              <a href="https://github.com/AustinPEdwards">
-                <img id="github-image" src="{% static 'images/github.png' %}" alt="GitHub Profile">
-              </a>
-            </p>
-          </div>
-          <div class="team-member">
-            <h3 id="member-name">Conner Trouy</h3>
-            <p>
-              <a href="https://github.com/cjtrouy">
-                <img id="github-image" src="{% static 'images/github.png' %}" alt="GitHub Profile">
-              </a>
-            </p>
-          </div>
-          <div class="team-member">
-            <h3 id="member-name">John Schwenke</h3>
-            <p>
-              <a href="https://github.com/SamoanJohn">
-                <img id="github-image" src="{% static 'images/github.png' %}" alt="GitHub Profile">
-              </a>
-            </p>
-          </div>
+        <h2 id="our-team-text">The Capstone Team</h2>
+        <div class="team-member">
+          <h3 id="member-name">Austin Edwards</h3>
+          <p>
+            <a href="https://github.com/AustinPEdwards">
+              <img id="github-image" src="{% static 'images/github.png' %}" alt="GitHub Profile">
+            </a>
+          </p>
+        </div>
+        <div class="team-member">
+          <h3 id="member-name">Conner Trouy</h3>
+          <p>
+            <a href="https://github.com/cjtrouy">
+              <img id="github-image" src="{% static 'images/github.png' %}" alt="GitHub Profile">
+            </a>
+          </p>
+        </div>
+        <div class="team-member">
+          <h3 id="member-name">John Schwenke</h3>
+          <p>
+            <a href="https://github.com/SamoanJohn">
+              <img id="github-image" src="{% static 'images/github.png' %}" alt="GitHub Profile">
+            </a>
+          </p>
+        </div>
         </h2>
         <h2 id="our-team-text">Advisors</h2>
-          <div class="team-member">
-            <h3 id="member-name">Dr. Frank Witmer</h3>
-          </div>
-          <div class="team-member">
-            <h3 id="member-name">Dr. Sebastian Neumayer</h3>
-          </div>
+        <div class="team-member">
+          <h3 id="member-name">Dr. Frank Witmer</h3>
+        </div>
+        <div class="team-member">
+          <h3 id="member-name">Dr. Sebastian Neumayer</h3>
+        </div>
         </h2>
-      </div>      
+      </div>
     </div>
   </footer>
   <!-- Footer -->
@@ -1116,4 +1169,3 @@
 
 
 </html>
-
