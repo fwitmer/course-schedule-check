@@ -1849,18 +1849,25 @@ h2 {
   font-weight: bold;
 }
 
-#license {
-  color: white !important;
+.footer a,
+#license,
+#terms-and-conditions,
+#email-link,
+#repo-link {
+  color: #ffffff !important;
+  text-decoration: underline;
 }
 
-#terms-and-conditions{
-  color: white !important;
+.footer a:hover,
+#license:hover,
+#terms-and-conditions:hover,
+#email-link:hover,
+#repo-link:hover {
+  color: #cce4ff !important;
+}
+
+#terms-and-conditions {
   font-weight: bold;
-}
-
-
-#email-link {
-  color: white !important;
 }
 
 #footer-right-column{
@@ -1912,8 +1919,9 @@ h2 {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.6);
   z-index: 9999;
+  cursor: pointer;
 }
 
 .terms-header {
@@ -1935,10 +1943,13 @@ h2 {
   transform: translate(-50%, -50%);
   background-color: var(--background-color);
   padding: 40px;
+  max-width: 700px;
   max-height: 90%;
   overflow-y: auto;
   text-align: justify;
   border-radius: 10px;
+  cursor: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .terms-box .terms-close {

@@ -2410,19 +2410,68 @@ window.addEventListener('load', function() {
   toggleOnlineCoursesButton.removeEventListener('click', toggleOnlineCourses);
   toggleOnlineCoursesButton.addEventListener('click', toggleOnlineCourses);
 
-  var termsLink = document.querySelector('.terms-link a');
-  var termsBox = document.querySelector('.terms-box');
-  var termsClose = document.querySelector('.terms-box .terms-close button');
+  // Setup Terms and Conditions modal listeners
+  initTermsModal();
+});
 
-  termsLink.addEventListener('click', function(event) {
+function openTermsModal(event) {
+  if (event) {
     event.preventDefault();
+  }
+  const termsBox = document.querySelector('.terms-box');
+  if (termsBox) {
     termsBox.style.display = 'block';
-  });
+  }
+}
 
-  termsClose.addEventListener('click', function(event) {
+function closeTermsModal(event) {
+  if (event) {
     event.preventDefault();
+  }
+  const termsBox = document.querySelector('.terms-box');
+  if (termsBox) {
     termsBox.style.display = 'none';
-  });
+  }
+}
+
+function initTermsModal() {
+  const termsLink = document.querySelector('#terms-and-conditions');
+  const termsBox = document.querySelector('.terms-box');
+  const termsClose = document.querySelector('.terms-box .terms-close button');
+
+  if (termsLink) {
+    termsLink.removeEventListener('click', openTermsModal);
+    termsLink.addEventListener('click', openTermsModal);
+  }
+
+  if (termsClose) {
+    termsClose.removeEventListener('click', closeTermsModal);
+    termsClose.addEventListener('click', closeTermsModal);
+  }
+
+  if (termsBox) {
+    termsBox.removeEventListener('click', handleTermsBackdropClick);
+    termsBox.addEventListener('click', handleTermsBackdropClick);
+  }
+
+  document.removeEventListener('keydown', handleTermsKeyDown);
+  document.addEventListener('keydown', handleTermsKeyDown);
+}
+
+function handleTermsBackdropClick(event) {
+  if (event.target === this) {
+    closeTermsModal(event);
+  }
+}
+
+function handleTermsKeyDown(event) {
+  if (event.key === 'Escape') {
+    closeTermsModal(event);
+  }
+}
+
+$(document).ready(function() {
+  initTermsModal();
 });
 
 
